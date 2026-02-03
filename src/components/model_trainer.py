@@ -1,47 +1,72 @@
 import os
 import sys
-import pickle
-from src.logger import logging
-from src.exception import CustomException
 from dataclasses import dataclass
+from src.utils import save_object, evaluate_models
+from src.exception import CustomException
+from src.logger import logging
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (accuracy_score,
-                             f1_score,
-                             precision_score, 
-                             recall_score,
-                             classification_report)
+from sklearn.metrics import f1_score
 from xgboost import XGBClassifier
-from src.utils import save_object,evaluate_models
+
+from src.logger import logging
+from src.exception import CustomException
+from src.utils import save_object, evaluate_models
+
 
 @dataclass
 class ModelTrainerConfig:
-    trained_model_file_path: str = os.path.join('artifacts', 'model.pkl')
-    
+    trained_model_file_path: str = os.path.join("artifacts", "model.pkl")
+
+
 class ModelTrainer:
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
-        
+
     def initiate_model_trainer(self, X_train, y_train, X_test, y_test):
         try:
-            logging.info("Evaluating models")
-            
+            logging.info("Starting model training and evaluation")
+
             models = {
-                "Logistic Regression": LogisticRegression(),
-                "Random Forest": RandomForestClassifier(),
-                "Decision Tree": DecisionTreeClassifier(),
-                "XGBoost": XGBClassifier()
+                "Logistic Regression": LogisticRegression(
+                    max_iter=1000,
+                    class_weight="balanced",
+                    n_jobs=-1
+                ),
+                "Decision Tree": DecisionTreeClassifier(
+                    max_depth=10,
+                    random_state=42
+                ),
+                "Random Forest": RandomForestClassifier(
+                    n_estimators=300,
+                    max_depth=12,
+                    random_state=42,
+                    n_jobs=-1
+                ),
+                "XGBoost": XGBClassifier(
+                    n_estimators=300,
+                    max_depth=6,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    eval_metric="logloss",
+                    random_state=42
+                )
             }
-            
-            model_report: dict = evaluate_models(X_train, y_train, X_test, y_test, models)
-            
-            # Find the best model score and name
-            best_model_score = max(sorted(model_report.values()))
-            best_model_name = list(model_report.keys())[
-                list(model_report.values()).index(best_model_score)
-            ]
-            
+
+            # Evaluate all models (returns model_name -> f1_score)
+            model_report = evaluate_models(
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                y_test=y_test,
+                models=models
+            )
+
+            # Select best model
+            best_model_name = max(model_report, key=model_report.get)
+            best_model_score = model_report[best_model_name]
             best_model = models[best_model_name]
 
             # Add a threshold check
@@ -62,6 +87,7 @@ class ModelTrainer:
             return final_f1
 
         except Exception as e:
+            logging.error("Error during model training")
             raise CustomException(e, sys)
         
         

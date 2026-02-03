@@ -2,6 +2,8 @@ numpy
 pandas
 seaborn
 matplotlib
+fastapi
+uvicorn
 scikit-learn
 xgboost
 -e .
