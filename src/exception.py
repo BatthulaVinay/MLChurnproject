@@ -9,7 +9,6 @@ def error_message_detail(error_message, error_detail=None):
         return f"Exception in {exc_tb.tb_frame.f_code.co_filename}, line {exc_tb.tb_lineno}: {error_message}"
     else:
         return str(error_message)
-
     
 
 class CustomException(Exception):

@@ -10,8 +10,31 @@ from src.exception import CustomException
 from dataclasses import dataclass
 
 # Top-level function to replace lambda for binary encoding
+
 def yes_no_to_int(x):
     return (x == "Yes").astype(int)
+
+def encode_target(y):
+    if y.dtype == bool:
+        return y.astype(int)
+
+    if pd.api.types.is_numeric_dtype(y):
+        return y.astype(int)
+
+    y_clean = (
+        y.astype(str)
+         .str.strip()
+         .str.lower()
+    )
+
+    mapping = {"yes": 1, "no": 0, "true": 1, "false": 0}
+    y_mapped = y_clean.map(mapping)
+
+    if y_mapped.isna().any():
+        bad_values = y[y_mapped.isna()].unique()
+        raise ValueError(f"Unexpected target labels found: {bad_values}")
+
+    return y_mapped.astype(int)
 
 
 @dataclass
@@ -71,7 +94,7 @@ class DataTransformation:
             
             # Binary: top-level FunctionTransformer
             binary_transformer = Pipeline(steps=[
-                ("binary_encode", FunctionTransformer(yes_no_to_int))
+                ("binary_encode", FunctionTransformer(yes_no_to_int, validate=False))
             ])
             
             # Combine all transformers
@@ -111,20 +134,17 @@ class DataTransformation:
             X_test = test_df.drop(columns=[self.target_column])
             y_test = test_df[self.target_column]
             
-            # Encode binary features
-            for col in self.binary_features:
-                X_train[col] = (X_train[col] == 'Yes').astype(int)
-                X_test[col] = (X_test[col] == 'Yes').astype(int)
-            
+        
             # Preprocessor
             preprocessor = self.get_data_transformer_object()
             X_train_scaled = preprocessor.fit_transform(X_train)
             X_test_scaled = preprocessor.transform(X_test)
             
             # Encode target
-            y_train_encoded = (y_train == 'Yes').astype(int)
-            y_test_encoded = (y_test == 'Yes').astype(int)
+            y_train_encoded = encode_target(y_train)
+            y_test_encoded = encode_target(y_test)
             
+        
             # Save preprocessor
             os.makedirs(os.path.dirname(self.transformation_config.preprocessor_obj_file_path), exist_ok=True)
             with open(self.transformation_config.preprocessor_obj_file_path, 'wb') as f:
@@ -150,7 +170,7 @@ if __name__ == "__main__":
     # Run data transformation
     data_transformation = DataTransformation()
     X_train, X_test, y_train, y_test, preprocessor_path = data_transformation.initiate_data_transformation(
-        train_path, test_path
+        train_path, test_path,
     )
     
     print(f"Data transformation completed:")
