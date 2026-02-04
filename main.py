@@ -1,4 +1,5 @@
 import sys
+import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -24,6 +25,10 @@ class ChurnRequest(BaseModel):
     total_intl_minutes: float
     customer_service_calls: int
     number_vmail_messages: int
+    total_day_calls: int
+    total_eve_calls: int
+    total_night_calls: int
+    total_intl_calls: int
     international_plan: str
     voice_mail_plan: str
     area_code: int
@@ -40,6 +45,10 @@ def predict_churn(request: ChurnRequest):
             total_intl_minutes=request.total_intl_minutes,
             customer_service_calls=request.customer_service_calls,
             number_vmail_messages=request.number_vmail_messages,
+            total_day_calls=request.total_day_calls,
+            total_eve_calls=request.total_eve_calls,
+            total_night_calls=request.total_night_calls,
+            total_intl_calls=request.total_intl_calls,
             international_plan=request.international_plan,
             voice_mail_plan=request.voice_mail_plan,
             area_code=request.area_code

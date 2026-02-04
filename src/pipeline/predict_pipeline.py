@@ -5,6 +5,7 @@ import numpy as np
 
 from src.logger import logging
 from src.exception import CustomException
+
 from src.utils import load_object
 
 
@@ -34,7 +35,7 @@ class PredictPipeline:
 
             logging.info("Generating predictions")
             predictions = model.predict(data_transformed)
-
+        
             return predictions
 
         except Exception as e:
@@ -56,6 +57,10 @@ class CustomData:
         total_intl_minutes: float,
         customer_service_calls: int,
         number_vmail_messages: int,
+        total_day_calls: int,
+        total_eve_calls: int,
+        total_night_calls: int,
+        total_intl_calls: int,
         international_plan: str,
         voice_mail_plan: str,
         area_code: int
@@ -67,8 +72,12 @@ class CustomData:
         self.total_intl_minutes = total_intl_minutes
         self.customer_service_calls = customer_service_calls
         self.number_vmail_messages = number_vmail_messages
-        self.international_plan = international_plan
-        self.voice_mail_plan = voice_mail_plan
+        self.total_day_calls = total_day_calls
+        self.total_eve_calls = total_eve_calls
+        self.total_night_calls = total_night_calls
+        self.total_intl_calls = total_intl_calls
+        self.international_plan = international_plan.title()
+        self.voice_mail_plan = voice_mail_plan.title()
         self.area_code = area_code
 
     def get_data_as_dataframe(self) -> pd.DataFrame:
@@ -81,6 +90,10 @@ class CustomData:
                 "Total intl minutes": [self.total_intl_minutes],
                 "Customer service calls": [self.customer_service_calls],
                 "Number vmail messages": [self.number_vmail_messages],
+                "Total day calls": [self.total_day_calls],
+                "Total eve calls": [self.total_eve_calls],
+                "Total night calls": [self.total_night_calls],
+                "Total intl calls": [self.total_intl_calls],
                 "International plan": [self.international_plan],
                 "Voice mail plan": [self.voice_mail_plan],
                 "Area code": [self.area_code]
@@ -90,24 +103,3 @@ class CustomData:
 
         except Exception as e:
             raise CustomException(e, sys)
-
-if __name__ == "__main__":
-    # Quick local test
-    sample_input = CustomData(
-        account_length=100,
-        total_day_minutes=180.5,
-        total_eve_minutes=200.3,
-        total_night_minutes=220.1,
-        total_intl_minutes=10.5,
-        customer_service_calls=1,
-        number_vmail_messages=20,
-        international_plan="No",
-        voice_mail_plan="Yes",
-        area_code=415
-    )
-
-    df = sample_input.get_data_as_dataframe()
-    predictor = PredictPipeline()
-    result = predictor.predict(df)
-
-    print("Prediction:", result)

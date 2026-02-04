@@ -4,6 +4,6 @@ seaborn
 matplotlib
 fastapi
 uvicorn
+streamlit
+requests
 scikit-learn
-xgboost
--e .

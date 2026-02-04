@@ -55,7 +55,11 @@ class DataTransformation:
             "Total night minutes",
             "Total intl minutes",
             "Customer service calls",
-            "Number vmail messages"
+            "Number vmail messages",
+            "Total day calls",
+            "Total eve calls",
+             "Total night calls",
+             "Total intl calls"
         ]
         
         self.binary_features = [
