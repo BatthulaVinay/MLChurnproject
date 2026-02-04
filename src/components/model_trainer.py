@@ -7,7 +7,7 @@ from src.logger import logging
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 from xgboost import XGBClassifier
 
 from src.logger import logging

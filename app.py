@@ -1,58 +1,62 @@
-import sys
-from fastapi import FastAPI
-from pydantic import BaseModel
+import streamlit as st
+import requests
 
-from src.pipeline.predict_pipeline import PredictPipeline, CustomData
-from src.exception import CustomException
+API_URL = "http://localhost:8000/predict"
 
-app = FastAPI(
-    title="Customer Churn Prediction API",
-    version="1.0"
-)
+st.set_page_config(page_title="Customer Churn Predictor", layout="centered")
+st.title("📉 Customer Churn Prediction")
 
+st.markdown("Enter customer details to predict churn.")
 
-@app.get("/")
-def health_check():
-    return {"status": "OK", "message": "Customer Churn API is running"}
+with st.form("churn_form"):
+    account_length = st.number_input("Account Length", min_value=0)
+    total_day_minutes = st.number_input("Total Day Minutes", min_value=0.0)
+    total_eve_minutes = st.number_input("Total Evening Minutes", min_value=0.0)
+    total_night_minutes = st.number_input("Total Night Minutes", min_value=0.0)
+    total_intl_minutes = st.number_input("Total International Minutes", min_value=0.0)
+    customer_service_calls = st.number_input("Customer Service Calls", min_value=0)
+    number_vmail_messages = st.number_input("Voicemail Messages", min_value=0)
 
+    international_plan = st.selectbox(
+        "International Plan", ["yes", "no"]
+    )
+    voice_mail_plan = st.selectbox(
+        "Voice Mail Plan", ["yes", "no"]
+    )
 
-class ChurnRequest(BaseModel):
-    account_length: int
-    total_day_minutes: float
-    total_eve_minutes: float
-    total_night_minutes: float
-    total_intl_minutes: float
-    customer_service_calls: int
-    number_vmail_messages: int
-    international_plan: str
-    voice_mail_plan: str
-    area_code: int
+    area_code = st.selectbox(
+        "Area Code", [408, 415, 510]
+    )
 
+    submit = st.form_submit_button("Predict Churn")
 
-@app.post("/predict")
-def predict_churn(request: ChurnRequest):
+if submit:
+    payload = {
+        "account_length": account_length,
+        "total_day_minutes": total_day_minutes,
+        "total_eve_minutes": total_eve_minutes,
+        "total_night_minutes": total_night_minutes,
+        "total_intl_minutes": total_intl_minutes,
+        "customer_service_calls": customer_service_calls,
+        "number_vmail_messages": number_vmail_messages,
+        "international_plan": international_plan,
+        "voice_mail_plan": voice_mail_plan,
+        "area_code": area_code,
+    }
+
     try:
-        data = CustomData(
-            account_length=request.account_length,
-            total_day_minutes=request.total_day_minutes,
-            total_eve_minutes=request.total_eve_minutes,
-            total_night_minutes=request.total_night_minutes,
-            total_intl_minutes=request.total_intl_minutes,
-            customer_service_calls=request.customer_service_calls,
-            number_vmail_messages=request.number_vmail_messages,
-            international_plan=request.international_plan,
-            voice_mail_plan=request.voice_mail_plan,
-            area_code=request.area_code
-        )
+        response = requests.post(API_URL, json=payload)
+        result = response.json()
 
-        df = data.get_data_as_dataframe()
-        predictor = PredictPipeline()
-        prediction = predictor.predict(df)
+        if response.status_code == 200:
+            if result["churn_prediction"] == 1:
+                st.error("🚨 Customer is likely to churn")
+            else:
+                st.success("✅ Customer is unlikely to churn")
 
-        return {
-            "churn_prediction": int(prediction[0]),
-            "label": "Yes" if prediction[0] == 1 else "No"
-        }
+            st.json(result)
+        else:
+            st.error("Prediction failed")
 
     except Exception as e:
-        raise CustomException(e, sys)
+        st.error(f"API error: {e}")

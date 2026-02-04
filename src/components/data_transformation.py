@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import numpy as np
+import numpy as nppyth
 import pickle
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
