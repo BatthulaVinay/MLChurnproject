@@ -31,8 +31,7 @@ class ModelTrainer:
             models = {
                 "Logistic Regression": LogisticRegression(
                     max_iter=1000,
-                    class_weight="balanced",
-                    n_jobs=-1
+                    class_weight="balanced"
                 ),
                 "Decision Tree": DecisionTreeClassifier(
                     max_depth=10,
@@ -42,7 +41,7 @@ class ModelTrainer:
                     n_estimators=300,
                     max_depth=12,
                     random_state=42,
-                    n_jobs=-1
+                    class_weight="balanced"
                 ),
                 "XGBoost": XGBClassifier(
                     n_estimators=300,

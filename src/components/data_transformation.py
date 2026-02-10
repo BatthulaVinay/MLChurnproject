@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import numpy as nppyth
+import numpy as np
 import pickle
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -83,6 +83,7 @@ class DataTransformation:
 
     def get_data_transformer_object(self):
         """Create preprocessing pipeline for features"""
+        
         try:
             logging.info("Creating preprocessing pipeline")
             
@@ -91,9 +92,9 @@ class DataTransformation:
                 ("scaler", StandardScaler())
             ])
             
-            # Categorical: OneHotEncoder
+            
             categorical_transformer = Pipeline(steps=[
-                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+                ("scaler", StandardScaler()) 
             ])
             
             # Binary: top-level FunctionTransformer

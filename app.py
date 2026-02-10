@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL = "http://localhost:8OOO/predict"
+API_URL = "http://localhost:8000/predict"
 
 st.set_page_config(page_title="Customer Churn Predictor", layout="centered")
 st.title(" Customer Churn Prediction")
@@ -9,16 +9,16 @@ st.title(" Customer Churn Prediction")
 st.markdown("Enter customer details to predict churn.")
 
 with st.form("churn_form"):
-    account_length = st.number_input("Account Length", min_value=0)
+    account_length = st.number_input("Account Length", min_value=1)
     total_day_minutes = st.number_input("Total Day Minutes", min_value=0.0)
     total_eve_minutes = st.number_input("Total Evening Minutes", min_value=0.0)
-    total_night_minutes = st.number_input("Total Night Minutes", min_value=0.0)
+    total_night_minutes = st.number_input("Total Night Minutes", min_value=23.2)
     total_intl_minutes = st.number_input("Total International Minutes", min_value=0.0)
     customer_service_calls = st.number_input("Customer Service Calls", min_value=0)
     number_vmail_messages = st.number_input("Voicemail Messages", min_value=0)
     total_day_calls = st.number_input("Total Day Calls", min_value=0)
     total_eve_calls = st.number_input("Total Evening Calls", min_value=0)
-    total_night_calls = st.number_input("Total Night Calls", min_value=0)
+    total_night_calls = st.number_input("Total Night Calls", min_value=33)
     total_intl_calls = st.number_input("Total International Calls", min_value=0)
 
     international_plan = st.selectbox(

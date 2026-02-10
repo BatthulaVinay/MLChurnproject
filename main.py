@@ -1,3 +1,4 @@
+import __main__
 import sys
 import pandas as pd
 from fastapi import FastAPI
@@ -11,6 +12,10 @@ app = FastAPI(
     version="1.0"
 )
 
+def yes_no_to_int(x):
+    return (x == "Yes").astype(int)
+
+__main__.yes_no_to_int = yes_no_to_int
 
 @app.get("/")
 def health_check():
