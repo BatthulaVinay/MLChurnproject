@@ -6,11 +6,14 @@ from pydantic import BaseModel
 
 from src.pipeline.predict_pipeline import PredictPipeline, CustomData
 from src.exception import CustomException
+from src.logger import logging
 
 app = FastAPI(
     title="Customer Churn Prediction API",
     version="1.0"
 )
+
+logging.info("Customer Churn API starting...")
 
 def yes_no_to_int(x):
     return (x == "Yes").astype(int)
@@ -42,6 +45,10 @@ class ChurnRequest(BaseModel):
 @app.post("/predict")
 def predict_churn(request: ChurnRequest):
     try:
+        
+        logging.info("Received prediction request")
+        logging.info(f"Input data: {request.dict()}")
+        
         data = CustomData(
             account_length=request.account_length,
             total_day_minutes=request.total_day_minutes,
@@ -60,8 +67,13 @@ def predict_churn(request: ChurnRequest):
         )
 
         df = data.get_data_as_dataframe()
+        logging.info("Data converted to DataFrame")
+        
         predictor = PredictPipeline()
+        logging.info("Model pipeline loaded")
+        
         prediction = predictor.predict(df)
+        logging.info(f"Prediction result: {prediction[0]}")
 
         return {
             "churn_prediction": int(prediction[0]),
@@ -69,4 +81,5 @@ def predict_churn(request: ChurnRequest):
         }
 
     except Exception as e:
+        logging.error("Error during prediction", exc_info=True)
         raise CustomException(e, sys)

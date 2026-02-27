@@ -94,7 +94,7 @@ class DataTransformation:
             
             
             categorical_transformer = Pipeline(steps=[
-                ("scaler", StandardScaler()) 
+                ("encoder", OneHotEncoder(handle_unknown="ignore"))
             ])
             
             # Binary: top-level FunctionTransformer
@@ -179,9 +179,5 @@ if __name__ == "__main__":
     )
     
     print(f"Data transformation completed:")
-    print(f"  X_train: {X_train.shape}")
-    print(f"  X_test: {X_test.shape}")
-    print(f"  y_train: {y_train.shape}")
-    print(f"  y_test: {y_test.shape}")
-    print(f"  Preprocessor saved to: {preprocessor_path}")
+ 
 

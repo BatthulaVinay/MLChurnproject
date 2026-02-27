@@ -13,6 +13,7 @@ class PredictPipeline:
     def __init__(self):
         self.model_path = os.path.join("artifacts", "model.pkl")
         self.preprocessor_path = os.path.join("artifacts", "preprocessor.pkl")
+        
 
     def predict(self, features: pd.DataFrame):
         """
@@ -29,15 +30,23 @@ class PredictPipeline:
 
             preprocessor = load_object(self.preprocessor_path)
             model = load_object(self.model_path)
-
+            
+            required_columns = preprocessor.feature_names_in_
+            missing_cols = set(required_columns) - set(features.columns)
+            if missing_cols:
+                raise ValueError(f"Missing columns in input data: {missing_cols}")
+            
             logging.info("Transforming input features")
             data_transformed = preprocessor.transform(features)
 
             logging.info("Generating predictions")
-            predictions = model.predict(data_transformed)
-        
-            return predictions
+            probs = model.predict_proba(data_transformed)[:, 1]
 
+            threshold = 0.3  # or configurable
+            predictions = (probs >= threshold).astype(int)
+
+            return predictions, probs
+        
         except Exception as e:
             logging.error("Error during prediction")
             raise CustomException(e, sys)

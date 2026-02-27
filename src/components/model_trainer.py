@@ -7,12 +7,9 @@ from src.logger import logging
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score
 from xgboost import XGBClassifier
-
-from src.logger import logging
-from src.exception import CustomException
-from src.utils import save_object, evaluate_models
+from sklearn.model_selection import cross_val_score
 
 
 @dataclass
@@ -27,11 +24,14 @@ class ModelTrainer:
     def initiate_model_trainer(self, X_train, y_train, X_test, y_test):
         try:
             logging.info("Starting model training and evaluation")
-
+            
+            scale_pos_weight = (len(y_train) - sum(y_train)) / sum(y_train)
+            
             models = {
                 "Logistic Regression": LogisticRegression(
                     max_iter=1000,
-                    class_weight="balanced"
+                    class_weight="balanced",
+                    random_state=42
                 ),
                 "Decision Tree": DecisionTreeClassifier(
                     max_depth=10,
@@ -50,6 +50,7 @@ class ModelTrainer:
                     subsample=0.8,
                     colsample_bytree=0.8,
                     eval_metric="logloss",
+                    scale_pos_weight=scale_pos_weight,
                     random_state=42
                 )
             }
@@ -62,27 +63,44 @@ class ModelTrainer:
                 y_test=y_test,
                 models=models
             )
-
+            
+            if best_model_score < 0.6:
+                raise CustomException("No best model found with acceptable performance")
             # Select best model
             best_model_name = max(model_report, key=model_report.get)
             best_model_score = model_report[best_model_name]
-            best_model = models[best_model_name]
-
-            # Add a threshold check
-            if best_model_score < 0.6:
-                raise CustomException("No best model found with acceptable performance")
-
-            logging.info(f"Best model found: {best_model_name} with F1: {best_model_score}")
             
+            logging.info(f"Best Model: {best_model_name} with F1 Score: {best_model_score}")
+            
+            # Get model instance
+            best_model = models[best_model_name]
+            
+            # Fit on full training data
+            best_model.fit(X_train, y_train)
+            
+            # Cross-validation on training data
+            cv_score = cross_val_score(
+            best_model,
+            X_train,
+            y_train,
+            cv=5,
+            scoring="f1"
+            ).mean()
+
+            logging.info(f"Cross-validated F1 score: {cv_score}")
+
+            # Final test prediction
+            predicted = best_model.predict(X_test)
+            final_f1 = f1_score(y_test, predicted)
+
+            logging.info(f"Final Test F1 Score: {final_f1}")
+
+            # Save trained model
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
                 obj=best_model
             )
-            
-            predicted = best_model.predict(X_test)
-            # Use a different name for the variable than the function
-            final_f1 = f1_score(y_test, predicted)
-            
+            logging.info(f"Final Test F1 Score: {final_f1}")
             return final_f1
 
         except Exception as e:

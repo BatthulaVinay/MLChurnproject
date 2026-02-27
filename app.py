@@ -1,7 +1,10 @@
 import streamlit as st
 import requests
+from src.logger import logging
 
 API_URL = "http://localhost:8000/predict"
+
+logging.info("Streamlit app started")
 
 st.set_page_config(page_title="Customer Churn Predictor", layout="centered")
 st.title(" Customer Churn Prediction")
@@ -35,6 +38,9 @@ with st.form("churn_form"):
     submit = st.form_submit_button("Predict Churn")
 
 if submit:
+    
+    logging.info("Prediction button clicked")
+    
     payload = {
         "account_length": account_length,
         "total_day_minutes": total_day_minutes,
@@ -52,19 +58,32 @@ if submit:
         "area_code": area_code,
     }
 
+    logging.info(f"Payload created: {payload}")
+    
     try:
+        
+        logging.info("Sending request to FastAPI backend")
+        
         response = requests.post(API_URL, json=payload)
+        logging.info(f"Response status code: {response.status_code}")
+        
         result = response.json()
+        
+        logging.info(f"Response received: {result}")
 
         if response.status_code == 200:
             if result["churn_prediction"] == 1:
+                logging.info("Prediction result: Customer likely to churn")
                 st.error("🚨 Customer is likely to churn")
             else:
                 st.success("✅ Customer is unlikely to churn")
+                logging.info("Prediction result: Customer unlikely to churn")
 
             st.json(result)
         else:
+            logging.error("Prediction failed due to non-200 response")
             st.error("Prediction failed")
 
     except Exception as e:
+        logging.exception("Exception occurred during API call")
         st.error(f"API error: {e}")
