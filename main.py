@@ -72,12 +72,17 @@ def predict_churn(request: ChurnRequest):
         predictor = PredictPipeline()
         logging.info("Model pipeline loaded")
         
-        prediction = predictor.predict(df)
-        logging.info(f"Prediction result: {prediction[0]}")
+        predictions, probabilities = predictor.predict(df)
+        predicted_class = int(predictions[0])
+        predicted_probability = float(probabilities[0])
+        logging.info(
+            f"Prediction result: class={predicted_class}, probability={predicted_probability:.4f}"
+        )
 
         return {
-            "churn_prediction": int(prediction[0]),
-            "label": "Yes" if prediction[0] == 1 else "No"
+            "churn_prediction": predicted_class,
+            "churn_probability": round(predicted_probability, 4),
+            "label": "Yes" if predicted_class == 1 else "No"
         }
 
     except Exception as e:

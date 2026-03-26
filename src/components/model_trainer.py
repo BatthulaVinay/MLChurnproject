@@ -63,12 +63,13 @@ class ModelTrainer:
                 y_test=y_test,
                 models=models
             )
-            
-            if best_model_score < 0.6:
-                raise CustomException("No best model found with acceptable performance")
+
             # Select best model
             best_model_name = max(model_report, key=model_report.get)
             best_model_score = model_report[best_model_name]
+
+            if best_model_score < 0.6:
+                raise CustomException("No best model found with acceptable performance")
             
             logging.info(f"Best Model: {best_model_name} with F1 Score: {best_model_score}")
             
@@ -127,4 +128,3 @@ if __name__ == "__main__":
     f1 = model_trainer.initiate_model_trainer(X_train, y_train, X_test, y_test)
     
     print(f"Model training completed with f1 score: {f1}")
-
